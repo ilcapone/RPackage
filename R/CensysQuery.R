@@ -41,4 +41,8 @@ censys_search <- function(index=c("ipv4", "websites", "certificates"),
   
 }
 
-censys_data <- censys_search("ipv4", "80.http.get.headers.server: Apache", 2, c("ip", "location.country", "autonomous_system.asn"))
+censys_data <- censys_search("ipv4", "443.https.tls.version: TLSv1.1", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude"))
+censys_data$results
+
+
+
