@@ -45,9 +45,11 @@ censys_search <- function(index=c("ipv4", "websites", "certificates"),
 
 
 #location.country_code: DE and protocols: ("23/telnet" or "21/ftp")
-censys_data <- censys_search("ipv4", "443.https.tls.version: TLSv1.1", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude"))
+#25.smtp.starttls.tls.cipher_suite.name
+censys_data <- censys_search("ipv4", "location.country_code: DE and protocols: (\"23/telnet\" or \"21/ftp\")", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude"))
 censys_data <- censys_search("ipv4", "not 443.https.tls.validation.browser_trusted: true", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude"))
+censys_data_TLS <- censys_search("ipv4", "25.smtp.starttls.tls.cipher_suite.id: 0x0035", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude","25.smtp.starttls.tls.cipher_suite.id"))
 censys_data$results
-
+View(censys_data$results)
 
 
