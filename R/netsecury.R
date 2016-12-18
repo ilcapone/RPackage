@@ -21,4 +21,4 @@ temp2 <- filter(cves, grepl(pattern= ".*TLS.*", x=description, ignore.case=T))
 #Serch for cpe.sofware
 temp3 <- filter(cves, grepl(pattern= ".*TLS.*", x=cpe.software, ignore.case=T))
 #TODO c(list from CVEs rows)
-temp_join <- full_join(temp2, temp3, by = "cve")
+#temp_join <- full_join(temp2, temp3, by = "cve")
