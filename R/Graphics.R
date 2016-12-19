@@ -5,7 +5,7 @@
 
 library("raster")
 adm<-getData('GADM', country='ESP', level=4)
-cat<-(adm[adm$NAME_1=="",])
+cat<-(adm[adm$NAME_1=="Cataluña",])
 plot(cat, bg="dodgerblue", axes=T)
 plot(cat, lwd=10, border="skyblue", add=T)
 plot(cat, col="green4", add=T)
@@ -41,5 +41,7 @@ plot(newmap, xlim = c(-20, 59), ylim = c(35, 71), asp = 1)
 
 map("world", fill=TRUE, col="white", bg="lightblue", ylim=c(-60, 90), mar=c(0,0,0,0))
 points(long_V1.2,lat_V1.2, col="red", pch=16)
+points(long_V1.1,lat_V1.1, col="blue", pch=16)
+points(long_V1.0,lat_V1.0, col="yellow", pch=16)
 
 
