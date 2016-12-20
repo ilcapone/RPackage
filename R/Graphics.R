@@ -48,7 +48,13 @@ points(long_V1.0,lat_V1.0, col="yellow", pch=16)
 ##############
 
 library(ggplot2)
-qplot(x = location.continent, y = version, data = Full_Dataframe)
+qplot(x = location.continent, y = n, data = b)
+#qplot(x = location.continent, data = mpg, fill= drv)
 
+qplot(x = location.continent, y = n, data = b)
+g <-qplot(x = location.continent, y = n, data = b)
+g + geom_bar()
+g <-ggplot(mpg, aes(location.continent, n, color = class))
+g + geom_bar()
 
 
