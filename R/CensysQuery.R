@@ -69,7 +69,7 @@ CENSYS_API_URL <- "https://www.censys.io/api/v1/"
 #--------------
 censys_data_TLSv1.0_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.0\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
 version <- rep("TLSv1.0", 100)
-protocol <- rep("htps", 100)
+protocol <- rep("https", 100)
 censys_data_TLSv1.0_https$results <- cbind(censys_data_TLSv1.0_https$results,version)
 censys_data_TLSv1.0_https$results <- cbind(censys_data_TLSv1.0_https$results,protocol)
 Dataframe_TLSv1.0_https <- select(censys_data_TLSv1.0_https$results, location.continent, version, protocol)
@@ -77,14 +77,14 @@ Dataframe_TLSv1.0_https <- select(censys_data_TLSv1.0_https$results, location.co
 
 censys_data_TLSv1.1_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
 version <- rep("TLSv1.1", 100)
-protocol <- rep("htps", 100)
+protocol <- rep("https", 100)
 censys_data_TLSv1.1_https$results <- cbind(censys_data_TLSv1.1_https$results,version)
 censys_data_TLSv1.1_https$results <- cbind(censys_data_TLSv1.1_https$results,protocol)
 Dataframe_TLSv1.1_https <- select(censys_data_TLSv1.1_https$results, location.continent, version, protocol)
 
 censys_data_TLSv1.2_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.2\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
 version <- rep("TLSv1.2", 100)
-protocol <- rep("htps", 100)
+protocol <- rep("https", 100)
 censys_data_TLSv1.2_https$results <- cbind(censys_data_TLSv1.2_https$results,version)
 censys_data_TLSv1.2_https$results <- cbind(censys_data_TLSv1.2_https$results,protocol)
 Dataframe_TLSv1.2_https <- select(censys_data_TLSv1.2_https$results, location.continent, version, protocol)
@@ -154,7 +154,12 @@ censys_data_SSLv3_pop3s$results <- cbind(censys_data_SSLv3_pop3s$results,version
 censys_data_SSLv3_pop3s$results <- cbind(censys_data_SSLv3_pop3s$results,protocol)
 Dataframe_SSLv3_pop3s <- select(censys_data_SSLv3_pop3s$results, location.continent, version, protocol)
 
-Full_Dataframe <- bind_rows(Dataframe_SSLv3_https, Dataframe_SSLv3_imaps, Dataframe_SSLv3_pop3s, Dataframe_TLSv1.0_https, Dataframe_TLSv1.0_imaps, Dataframe_TLSv1.0_pop3s, Dataframe_TLSv1.1_https, Dataframe_TLSv1.1_imaps, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.2_https, Dataframe_TLSv1.2_imaps, Dataframe_TLSv1.2_pop3s)
+SSLv3_Dataframe <- bind_rows(Dataframe_SSLv3_https, Dataframe_SSLv3_imaps, Dataframe_SSLv3_pop3s)
+TLSv1.0_Dataframe <- bind_rows(Dataframe_TLSv1.0_https, Dataframe_TLSv1.0_imaps, Dataframe_TLSv1.0_pop3s)
+TLSv1.1_Dataframe <- bind_rows(Dataframe_TLSv1.1_https, Dataframe_TLSv1.1_imaps, Dataframe_TLSv1.1_pop3s)
+TLSv1.2_Dataframe <- bind_rows(Dataframe_TLSv1.2_https, Dataframe_TLSv1.2_imaps, Dataframe_TLSv1.2_pop3s)
+
+Full_Dataframe <- bind_rows(Dataframe_SSLv3_https, Dataframe_SSLv3_imaps, Dataframe_SSLv3_pop3s, Dataframe_TLSv1.0_https, Dataframe_TLSv1.0_imaps, Dataframe_TLSv1.0_pop3s, Dataframe_TLSv1.1_https, Dataframe_TLSv1.1_imaps, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.2_https, Dataframe_TLSv1.2_imaps, Dataframe_TLSv1.2_pop3s)
 
 
 
