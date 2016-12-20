@@ -13,9 +13,9 @@
 #cat$valors<-rnorm(1:length(cat$NAME_4), 10, 3)
 #plot(cat, col=cat$valors, add=T)
 
-library(ggmap)
-library(maptools)
-library(maps)
+#library(ggmap)
+#library(maptools)
+#library(maps)
 
 #ej<-get_map(location="España", source="google", maptype="terrain", zoom=5)
 #ggmap(ej)
@@ -32,29 +32,44 @@ library(maps)
 #geom_point(aes(x = lon, y = lat, size = offense, colour = offense), data = )
 #ggmap(myMap)
 
-wordMap<-get_map(location="Europe", source="google", maptype="satellite", zoom=3)
-ggmap(wordMap)
+#wordMap<-get_map(location="Europe", source="google", maptype="satellite", zoom=3)
+#ggmap(wordMap)
 
 
 library(rworldmap)
-newmap <- getMap(resolution = "low")
-plot(newmap, xlim = c(-20, 59), ylim = c(35, 71), asp = 1)
+sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
+#mapCountryData( sPDF, nameColumnToPlot="puntuacion" )
 
-map("world", fill=TRUE, col="white", bg="lightblue", ylim=c(-60, 90), mar=c(0,0,0,0))
-points(long_V1.2,lat_V1.2, col="red", pch=16)
-points(long_V1.1,lat_V1.1, col="blue", pch=16)
-points(long_V1.0,lat_V1.0, col="yellow", pch=16)
+#par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+#'Vhigh', 'High','Med', 'Low'
+
+#creating a user defined colour palette
+op <- palette(c('red','orange','yellow','green'))
+#find quartile breaks
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+#classify the data to a factor
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+#rename the categories
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+#mapping
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+
+
+
+#map("world", fill=TRUE, col="white", bg="lightblue", ylim=c(-60, 90), mar=c(0,0,0,0))
+#points(long_V1.2,lat_V1.2, col="red", pch=16)
+#points(long_V1.1,lat_V1.1, col="blue", pch=16)
+#points(long_V1.0,lat_V1.0, col="yellow", pch=16)
 
 ##############
 
-library(ggplot2)
-qplot(x = location.continent, y = n, data = b)
+#library(ggplot2)
+#qplot(x = location.continent, y = n, data = b)
 #qplot(x = location.continent, data = mpg, fill= drv)
 
-qplot(x = location.continent, y = n, data = b)
-g <-qplot(x = location.continent, y = n, data = b)
-g + geom_bar()
-g <-ggplot(mpg, aes(location.continent, n, color = class))
-g + geom_bar()
+#g <- qplot(x = key, y = SSLv3 , data = countries)
+#g <- ggplot(countries, aes(key, SSLv3, color = class))
+#g + geom_bar()
 
 

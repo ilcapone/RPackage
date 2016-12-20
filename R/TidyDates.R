@@ -19,22 +19,22 @@
 a  <- as.character(TLSv1.0_Dataframe$location.continent)
 a <- TLSv1.0_Dataframe
 a$location.continent <- as.character(a$location.continent)
-glimpse(a)
-b <-  dplyr::count(a, location.continent)
-View(b)
+Count_TLSv1.0 <-  dplyr::count(a, location.continent)
+
 v  <- as.character(TLSv1.1_Dataframe$location.continent)
 v <- TLSv1.1_Dataframe
 v$location.continent <- as.character(v$location.continent)
-glimpse(v)
-w <-  dplyr::count(v, location.continent)
-view(v)
-View(w)
+Count_TLSv1.1 <-  dplyr::count(v, location.continent)
+
 y  <- as.character(TLSv1.2_Dataframe$location.continent)
 y <- TLSv1.2_Dataframe
 y$location.continent <- as.character(y$location.continent)
-z <-  dplyr::count(y, location.continent)
-View(z)
+Count_TLSv1.2 <-  dplyr::count(y, location.continent)
+
 k  <- as.character(SSLv3_Dataframe$location.continent)
 k <- SSLv3_Dataframe
 k$location.continent <- as.character(k$location.continent)
-m <-  dplyr::count(k, location.continent)
+Count_SSLv3 <-  dplyr::count(k, location.continent)
+
+Full_Dataframe <- bind_rows(a, Dataframe_SSLv3_imaps, Dataframe_SSLv3_pop3s, Dataframe_TLSv1.0_https, Dataframe_TLSv1.0_imaps, Dataframe_TLSv1.0_pop3s, Dataframe_TLSv1.1_https, Dataframe_TLSv1.1_imaps, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.2_https, Dataframe_TLSv1.2_imaps, Dataframe_TLSv1.2_pop3s)
+
