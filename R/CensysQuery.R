@@ -66,18 +66,100 @@ CENSYS_API_URL <- "https://www.censys.io/api/v1/"
 #censys_data_hhtps<- censys_search("ipv4", "protocols: (\"443/https\")", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude","443.https.tls.version"))
 #censys_data_imaps <- censys_search("ipv4", "protocols: (\"993/imaps\")", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude","993.imaps.tls.tls.version"))
 #censys_data_pop3s <- censys_search("ipv4", "protocols: (\"995/pop3s\")", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude","995.pop3s.tls.tls.version"))
+#--------------
 censys_data_TLSv1.0_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.0\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.0", 100)
+protocol <- rep("htps", 100)
+censys_data_TLSv1.0_https$results <- cbind(censys_data_TLSv1.0_https$results,version)
+censys_data_TLSv1.0_https$results <- cbind(censys_data_TLSv1.0_https$results,protocol)
+Dataframe_TLSv1.0_https <- select(censys_data_TLSv1.0_https$results, location.continent, version, protocol)
+
+
 censys_data_TLSv1.1_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.1", 100)
+protocol <- rep("htps", 100)
+censys_data_TLSv1.1_https$results <- cbind(censys_data_TLSv1.1_https$results,version)
+censys_data_TLSv1.1_https$results <- cbind(censys_data_TLSv1.1_https$results,protocol)
+Dataframe_TLSv1.1_https <- select(censys_data_TLSv1.1_https$results, location.continent, version, protocol)
+
 censys_data_TLSv1.2_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.2\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.2", 100)
+protocol <- rep("htps", 100)
+censys_data_TLSv1.2_https$results <- cbind(censys_data_TLSv1.2_https$results,version)
+censys_data_TLSv1.2_https$results <- cbind(censys_data_TLSv1.2_https$results,protocol)
+Dataframe_TLSv1.2_https <- select(censys_data_TLSv1.2_https$results, location.continent, version, protocol)
+
 censys_data_SSLv3_https <- censys_search("ipv4", "443.https.tls.version: \"SSLv3\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
-censys_data_TLSv1.1_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
-censys_data_TLSv1.2_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"TLSv1.2\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("SSLv3", 100)
+protocol <- rep("htps", 100)
+censys_data_SSLv3_https$results <- cbind(censys_data_SSLv3_https$results,version)
+censys_data_SSLv3_https$results <- cbind(censys_data_SSLv3_https$results,protocol)
+Dataframe_SSLv3_https <- select(censys_data_SSLv3_https$results, location.continent, version, protocol)
+
+#--------------
 censys_data_TLSv1.0_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"TLSv1.0\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.0", 100)
+protocol <- rep("imaps", 100)
+censys_data_TLSv1.0_imaps$results <- cbind(censys_data_TLSv1.0_imaps$results,version)
+censys_data_TLSv1.0_imaps$results <- cbind(censys_data_TLSv1.0_imaps$results,protocol)
+Dataframe_TLSv1.0_imaps <- select(censys_data_TLSv1.0_imaps$results, location.continent, version, protocol)
+
+censys_data_TLSv1.1_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.1", 100)
+protocol <- rep("imaps", 100)
+censys_data_TLSv1.1_imaps$results <- cbind(censys_data_TLSv1.1_imaps$results,version)
+censys_data_TLSv1.1_imaps$results <- cbind(censys_data_TLSv1.1_imaps$results,protocol)
+Dataframe_TLSv1.1_imaps <- select(censys_data_TLSv1.1_imaps$results, location.continent, version, protocol)
+
+censys_data_TLSv1.2_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"TLSv1.2\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.0", 100)
+protocol <- rep("imaps", 100)
+censys_data_TLSv1.2_imaps$results <- cbind(censys_data_TLSv1.2_imaps$results,version)
+censys_data_TLSv1.2_imaps$results <- cbind(censys_data_TLSv1.2_imaps$results,protocol)
+Dataframe_TLSv1.2_imaps <- select(censys_data_TLSv1.2_imaps$results, location.continent, version, protocol)
+
 censys_data_SSLv3_imaps <- censys_search("ipv4", "993.imaps.tls.tls.version: \"SSLv3\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("SSLv3", 100)
+protocol <- rep("imaps", 100)
+censys_data_SSLv3_imaps$results <- cbind(censys_data_SSLv3_imaps$results,version)
+censys_data_SSLv3_imaps$results <- cbind(censys_data_SSLv3_imaps$results,protocol)
+Dataframe_SSLv3_imaps <- select(censys_data_SSLv3_imaps$results, location.continent, version, protocol)
+
+#--------------
 censys_data_TLSv1.0_pop3s <- censys_search("ipv4", "995.pop3s.tls.tls.version: \"TLSv1.0\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
-censys_data_TLSvp1.1_pop3s <- censys_search("ipv4", "995.pop3s.tls.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.0", 100)
+protocol <- rep("pop3s", 100)
+censys_data_TLSv1.0_pop3s$results <- cbind(censys_data_TLSv1.0_pop3s$results,version)
+censys_data_TLSv1.0_pop3s$results <- cbind(censys_data_TLSv1.0_pop3s$results,protocol)
+Dataframe_TLSv1.0_pop3s <- select(censys_data_TLSv1.0_pop3s$results, location.continent, version, protocol)
+
+censys_data_TLSv1.1_pop3s <- censys_search("ipv4", "995.pop3s.tls.tls.version: \"TLSv1.1\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.1", 100)
+protocol <- rep("pop3s", 100)
+censys_data_TLSv1.1_pop3s$results <- cbind(censys_data_TLSv1.1_pop3s$results,version)
+censys_data_TLSv1.1_pop3s$results <- cbind(censys_data_TLSv1.1_pop3s$results,protocol)
+Dataframe_TLSv1.1_pop3s <- select(censys_data_TLSv1.1_pop3s$results, location.continent, version, protocol)
+
 censys_data_TLSv1.2_pop3s <- censys_search("ipv4", "995.pop3s.tls.tls.version: \"TLSv1.2\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("TLSv1.2", 100)
+protocol <- rep("pop3s", 100)
+censys_data_TLSv1.2_pop3s$results <- cbind(censys_data_TLSv1.2_pop3s$results,version)
+censys_data_TLSv1.2_pop3s$results <- cbind(censys_data_TLSv1.2_pop3s$results,protocol)
+Dataframe_TLSv1.2_pop3s <- select(censys_data_TLSv1.2_pop3s$results, location.continent, version, protocol)
+
 censys_data_SSLv3_pop3s <- censys_search("ipv4", "995.pop3s.tls.tls.version: \"SSLv3\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
+version <- rep("SSLv3", 100)
+protocol <- rep("pop3s", 100)
+censys_data_SSLv3_pop3s$results <- cbind(censys_data_SSLv3_pop3s$results,version)
+censys_data_SSLv3_pop3s$results <- cbind(censys_data_SSLv3_pop3s$results,protocol)
+Dataframe_SSLv3_pop3s <- select(censys_data_SSLv3_pop3s$results, location.continent, version, protocol)
+
+Full_Dataframe <- bind_rows(Dataframe_SSLv3_https, Dataframe_SSLv3_imaps, Dataframe_SSLv3_pop3s, Dataframe_TLSv1.0_https, Dataframe_TLSv1.0_imaps, Dataframe_TLSv1.0_pop3s, Dataframe_TLSv1.1_https, Dataframe_TLSv1.1_imaps, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.1_pop3s, Dataframe_TLSv1.2_https, Dataframe_TLSv1.2_imaps, Dataframe_TLSv1.2_pop3s)
+
+
+
+
+
 #censys_data_TLS_NULL <- censys_search("ipv4", "25.smtp.starttls.tls.cipher_suite.id: 0x000002	", 2, c("ip", "location.country", "autonomous_system.asn", "location.latitude", "location.longitude","25.smtp.starttls.tls.version","25.smtp.starttls.tls.cipher_suite.name"))
 #column <- 25.smtp.starttls.tls.version
 #+tls_V1.2 <- filter(censys_data_TLS$results, grepl(pattern= ".*TLSv1.2.*", x=`25.smtp.starttls.tls.version`, ignore.case=T))

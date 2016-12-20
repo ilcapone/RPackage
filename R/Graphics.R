@@ -45,5 +45,10 @@ points(long_V1.2,lat_V1.2, col="red", pch=16)
 points(long_V1.1,lat_V1.1, col="blue", pch=16)
 points(long_V1.0,lat_V1.0, col="yellow", pch=16)
 
+##############
+
+library(ggplot2)
+qplot(x = location.continent, y = version, data = Full_Dataframe)
+
 
 
