@@ -1,13 +1,9 @@
 
-df_countries <- function(protocol = c("443.https","110.pop3")){
+df_countries <- function(protocol = c("443.https","110.pop3.starttls","25.smtp.starttls","143.imap.starttls","995.pop3s","993.imaps")){
   protocol<-c("443.https")
   
-  if (protocol == "443.https") {
-    str_protocol<- paste(sep="",protocol,".tls.version:  ")
-  } else if (protocol == "110.pop3") {
-    str_protocol<- paste(sep="",protocol,".starttls.tls.version: ")
-  }
-  
+  str_protocol<- paste(sep="",protocol,".tls.version:  ")
+
   library(countrycode)
   str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.2\"")
   result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
