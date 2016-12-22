@@ -35,24 +35,6 @@
 #-----------------------------------------------------------------
 
 
-devtools::install_github("hrbrmstr/censys")
-
-library(httr)
-library(censys)
-library(purrr)
-library("XML")
-library("plyr")
-library("ggplot2")
-library("gridExtra")
-library(dplyr)
-
-#950dd34b-a475-4ac3-af0d-e39c8a0f4946
-#HlHy4bCBlIYHScZ1JExmai1m3EsOCDOI
-Sys.setenv(CENSYS_API_ID = "950dd34b-a475-4ac3-af0d-e39c8a0f4946", CENSYS_API_SECRET = "HlHy4bCBlIYHScZ1JExmai1m3EsOCDOI")
-
-#Sys.setenv(CENSYS_API_ID = "a995ad09-8f97-4e2b-bfc0-17376f1587f3", CENSYS_API_SECRET = "cqCj7NI9CqhFB4vnfUQH77vpVsYyWyMJ")
-
-CENSYS_API_URL <- "https://www.censys.io/api/v1/"
 
 #location.country_code: DE and protocols: ("23/telnet" or "21/ftp")
 #25.smtp.starttls.tls.cipher_suite.name

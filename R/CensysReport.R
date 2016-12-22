@@ -1,7 +1,7 @@
 
 
 df_countries <- function(protocol = c("443.https","110.pop3.starttls","25.smtp.starttls","143.imap.starttls","995.pop3s","993.imaps")){
-  protocol<-c("443.https")
+  #protocol<-c("443.https")
   
   str_protocol<- paste(sep="",protocol,".tls.version:  ")
 

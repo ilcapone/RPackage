@@ -2,7 +2,9 @@
 title: "Data Driven Security Project"
 output: html_document
 ---
+
 ```{r , echo=FALSE, results='hide', include=FALSE}
+
 devtools::install_github("hrbrmstr/censys")
 
 library(httr)
@@ -62,21 +64,8 @@ countries_https <- df_countries("443.https")
 countries_pop3 <- df_countries("110.pop3.starttls")
 countries_smtp <- df_countries("25.smtp.starttls")
 countries_imap <- df_countries("143.imap.starttls")
-countries_pop3s <- df_countries("995.pop3s")
-countries_imaps <- df_countries("993.imaps")
-
-paint_map <- function(countries){
-  
-  library(rworldmap)
-  par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
-  sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
-  op <- palette(c('red','orange','yellow','green'))
-  cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
-  sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
-  levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
-  mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
-
-}
+#countries_pop3s <- df_countries("995.pop3s")
+#countries_imaps <- df_countries("993.imaps")
 
 ```
 
@@ -200,7 +189,7 @@ str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.2\"")
 Como resultado de la consulta, se obtiene un data frame en la que cada fila es del tipo:
 
 ```{r echo=FALSE}
-countries[1,]
+countries_https[1,]
 
 ```
 
@@ -265,7 +254,7 @@ Para la interpretacion de los resultados decidimos pintar los datos en un mapamu
 
 library(rworldmap)
 par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
-sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
+sPDF <- joinCountryData2Map( countries_https , joinCode = "ISO2" , nameJoinColumn = "key")
 #mapCountryData( sPDF, nameColumnToPlot="puntuacion" )
 
 #par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
@@ -279,16 +268,15 @@ cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
 sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
 #rename the categories
 levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
 ```
 
-```{r , echo=FALSE}
-
+```{r echo=FALSE}
 #mapping
 mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
 
-
-
 ```
+
 
 En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables.
 

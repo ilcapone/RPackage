@@ -55,7 +55,18 @@ levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
 mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
 
 
-
+paint_map <- function(countries){
+  
+  library(rworldmap)
+  par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+  sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
+  op <- palette(c('red','orange','yellow','green'))
+  cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+  sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+  levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+  mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette',  oceanCol='lightblue', missingCountryCol='white')
+  
+}
 
 #map("world", fill=TRUE, col="white", bg="lightblue", ylim=c(-60, 90), mar=c(0,0,0,0))
 #points(long_V1.2,lat_V1.2, col="red", pch=16)
