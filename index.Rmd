@@ -2,28 +2,298 @@
 title: "Data Driven Security Project"
 output: html_document
 ---
+```{r , echo=FALSE, results='hide', include=FALSE}
+devtools::install_github("hrbrmstr/censys")
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(httr)
+library(censys)
+library(purrr)
+library("XML")
+library("plyr")
+library("ggplot2")
+library("gridExtra")
+library(dplyr)
+
+Sys.setenv(CENSYS_API_ID = "950dd34b-a475-4ac3-af0d-e39c8a0f4946", CENSYS_API_SECRET = "HlHy4bCBlIYHScZ1JExmai1m3EsOCDOI")
+
+#Sys.setenv(CENSYS_API_ID = "a995ad09-8f97-4e2b-bfc0-17376f1587f3", CENSYS_API_SECRET = "cqCj7NI9CqhFB4vnfUQH77vpVsYyWyMJ")
+
+CENSYS_API_URL <- "https://www.censys.io/api/v1/"
+
+
+df_countries <- function(protocol = c("443.https","110.pop3.starttls","25.smtp.starttls","143.imap.starttls","995.pop3s","993.imaps")){
+  #protocol<-c("443.https")
+  
+  str_protocol<- paste(sep="",protocol,".tls.version:  ")
+
+  library(countrycode)
+  str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.2\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.2<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.1\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.1<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.0\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.0<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"SSLv3\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_sslv3<-result$results
+  
+  df_total<-rbind(df_tls1.0,df_tls1.1,df_tls1.2,df_sslv3)
+  
+  df_total_por_TLS<-dplyr::full_join(df_tls1.0,df_tls1.1,by="key",fill=0)
+  df_total_por_TLS<-dplyr::full_join(df_total_por_TLS,df_tls1.2,by="key",fill=0)
+  df_total_por_TLS<-dplyr::full_join(df_total_por_TLS,df_sslv3,by="key",fill=0)
+  
+  colnames(df_total_por_TLS)<-c("key","TLSv1.0","TLSv1.1","TLSv1.2","SSLv3")
+  
+  df_total_por_TLS<-dplyr::mutate(df_total_por_TLS,Total=ifelse(is.na(TLSv1.0), 0, TLSv1.0)+ifelse(is.na(TLSv1.1), 0, TLSv1.1)+ifelse(is.na(TLSv1.2), 0, TLSv1.2)+ifelse(is.na(SSLv3), 0, SSLv3))  
+  puntuacion<-c(TLSv1.2=10,TLSv1.1=7.5,TLSv1.0=5,SSLv3=2.5)
+  df_total_por_TLS<-dplyr::mutate(df_total_por_TLS,puntuacion=(ifelse(is.na(TLSv1.2), 0, TLSv1.2)*puntuacion["TLSv1.2"]+ ifelse(is.na(TLSv1.1), 0, TLSv1.1)*puntuacion["TLSv1.1"]+ifelse(is.na(TLSv1.0), 0, TLSv1.0)*puntuacion["TLSv1.0"]+ifelse(is.na(SSLv3), 0, SSLv3)*puntuacion["SSLv3"]) /Total)
+  
+  return(df_total_por_TLS)
+}
+
+countries_https <- df_countries("443.https")
+countries_pop3 <- df_countries("110.pop3.starttls")
+countries_smtp <- df_countries("25.smtp.starttls")
+countries_imap <- df_countries("143.imap.starttls")
+countries_pop3s <- df_countries("995.pop3s")
+countries_imaps <- df_countries("993.imaps")
+
+paint_map <- function(countries){
+  
+  library(rworldmap)
+  par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+  sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
+  op <- palette(c('red','orange','yellow','green'))
+  cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+  sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+  levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+  mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+}
+
 ```
 
-## Introduction
+* Juan Gordo
+* Vladlena Trayno
+* Roberto Torrecillas
+* Xavier Armengou
+* Viviana Fernández
 
-The study tries to look at the relationship between the continents and the versions of TLS that operate their servers according to the protocol used (https, smtp, imaps, pop3s).
-For this we have used censys, a search engine for security information <https://censys.io/>.
+## PROCESO DE DATOS ESTRUCTURADOS
+### 1. Definicion de la pregunta
+Para la definición de una pregunta específica sobre la cual desarrollar el ejercicio práctico se pasó por diferentes fases de análisis, debido principalmente a las características y la disponibilidad de los datos disponibles para poder realizar inferencias a partir de ellos.
+El primer cuestionamiento tuvo que ver con qué tipo de información sería de interés conocer, es decir, qué, de todo el universo de datos (siendo estos públicos o accesibles hasta cierto nivel), podría aportar información con las siguientes características:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+* Suficiente en cantidad, de modo que permita realizar un análisis macro a partir de variables específicas
+* Relevante, desde la perspectiva de seguridad o aseguramiento
+* Agregables, los datos en las diferentes fuentes deben tener algún elemento común que permita correlacionarlos
 
-```{r cars}
-summary(cars)
+Más que una descripción del conjunto de datos que se ubique, el interés que se presenta es explorar las relaciones que pudieran efectuarse entre diferentes fuentes de datos, con el fin de poder aplicar las destrezas o conocimientos que se han ido abordando sobre la herramienta de desarrollo R y que a la vez los datos que se produzcan sean útiles desde una perspectiva de usuario final de la información.
+En este punto del análisis, hubo una iteración entre qué podría preguntarse y cuáles datos están disponibles, lo cual se describe en el aparte 3 de este documento, con el objetivo de poder determinar una relación entre dispositivos y algún tipo de vulnerabilidades, así como su ubicación física.
+Luego de una interacción con los datos, sus atributos y disponibilidad se llegó a determinar como pregunta objeto de este análisis la siguiente:
+__¿Qué porcentaje de los dispositivos conectados a internet, segregados por países, aún utilizan protocolos de cifrado en la capa de transporte que se saben ya vulnerados?__
+
+### 2. Definición del conjunto de datos ideal
+De acuerdo con lo indicado en el aparte anterior, el conjunto ideal de datos debería contener, al menos, lo siguiente:
+
+* Tipo de dispositivo conectado
+* Localización
+* Dato que permita inferir la vulnerabilidad
+* Dato de relación con las bases de datos de vulnerabilidades
+* Listado de vulnerabilidades
+
+Se requeriría además que la cantidad de información (población), que se logre extraer de las bases de datos de consulta esté actualizada y genere un número de registros suficiente para hacer inferencias que resulten razonables.
+
+### 3. Datos Accesibles
+En concordancia con los objetivos y el análisis sobre la definición de la pregunta, se valoraron dos fuentes de datos primarias, SHODAN <https://www.shodan.io/> , como un primer buscador de equipos conectados a internet, que puede proveer indicios información de vulnerabilidades conocidas y CENSYS <https://censys.io/> , con funcionalidades similares pero que además puede ir a un nivel de detalle mayor, siendo que genera listados de dispositivos conectados, que presentan una vulnerabilidad en particular.
+Con base en estos datos, que cumplen con la característica a y b del primer aparte, el siguiente paso es identificar posibles vulnerabilidades que se pudieran asociar a los dispositivos presentes en las bases de datos consultadas.
+En este punto, se analizó el uso de bases de datos como el Common Vulnerabilities and Exposures (CVE) como posible fuente de información, dado que es una fuente de reconocida confiabilidad y cantidad de detalles, sin embargo, la misma fue descartada dado que no fue posible identificar un punto de relación entre los datos obtenidos sobre los dispositivos y los atributos o características de la base de datos CVE.
+Realizando las exploraciones mencionadas, se fue reduciendo el campo de análisis hasta llegar a determinar que CENSYS puede suplir un listado de dispositivos conectados y que los registros indican el protocolo de cifrado utilizado en la capa de transporte (Transport Layer Security o TLS), dentro de los cuales se identificaron (SSLlv3, TLSv1.0, TLSv1.1, TLSv1.2).
+Información adicional sobre el por qué son vulnerables puede ser accedida en esta dirección: <https://securityevaluators.com/knowled…/…/20150119-protocols>
+Se procedió entonces a analizar una fuente adicional, el *Netsecurity Dataframe*, estructura que almacena datos relacionados a CVE y CPE (*Common Platform Enumeration*), para ello utilizamos el package net.security <https://github.com/r-net-tools/net.security> pero finalmente no fue posible relacionar con la información extraída de CENSYS.
+Para realizar las busquedas en CENSYS, se tuvo acceso a una package de R <https://github.com/hrbrmstr/censys>, con la cual se pueden realizar peticiones a la API (*Aplication Programming Interface*) de CENSYS. En base a esta se pudo realizar la extracción de información requerida para un análisis más delimitado que la expectativa inicial.
+
+### 4.Obtener los datos
+En primera instanica comenzamos recogiendo datos de CVEs y CENSYS. Tras una primera revision de los datos obtenidos podimos ovservar que las especificaciones obtenidas de los registros de los CVEs a priori no nos permitia relacionarlos con los obtenidos mediante las consultas de CENSYS. Por ello decidimos no emplear las consultas a los CVEs, ya que hubiese sido necesario realizar algunas funciones de busqeda mas inteligentes para filtrar la informacion util de dichos registros.
+
+
+####4.1 Variables definidas y su contenido
+Las variables empleadas para las busqedas de CVEs :
+
+* temp_description: Almacena los registros que en el campo description contengan "TLS".
+* temp_cpe.software: Almacena los registros que en el campo cpe.software contengan "TLS".
+
+Para la autentificacion de la API de CENSYS:
+
+* CENSYS_API_ID: Identificador del usuario que reliza la consulta.
+* CENSYS_API_SECRET: Secreto proposcionado por CENSYS tras realizar el registro.
+* CENSYS_API_URL: Url de CENSYS.
+
+El congunto de variables siguiente esta repetido tantas veces como procolos(https,imaps,pop3s) y versiones de TLS (SSLv3, TLSv1.0, TLSv1.1, TLSv1.2) y permiten realizar la busqeda y almacenar la respuesta de CENSYS:
+
+* censys_data_TLSv1.0_https: Recoge la informacion de query realizada a CENSYS
+* version: Lista de longitud cien y campo TLS de la verion que corresponda.
+* protocolo: Lista de longitud cien y campo protocolo de la verion que corresponda.
+* Dataframe_TLSv1.0_https: Formacion del la informacion elegante a partis de las tres varables anteriores,
+* Full_Dataframe: Union de los datos elegantes de todas las consultas para generar un unico elemento sobre el que realizar el analisis.
+
+Como esta busqeda era muy ineficiente hicimos una funcion que generase la query segun el protocolo y nos devolvise el resultado de la busqeda preparado para ser analizado y mostrado. Las variables que utilizamos en la funcion son:
++ **(__OJO AÑADIR AQUI EL SIGIFICADO DE LAS VARIABLES__)**
+
+* str_protocol: 
+* str_protocol_use: 
+* df_tls1.2:
+* df_tls1.1:
+* df_tls1.0:
+* df_sslv3:
+* df_total:
+* df_total_por_TLS:
+
++ **(__OJO AÑADIR AQUI LAS VARIABLES DE LAS COLUMNAS DE LOS DATAFRAMS Y OTROS DETALLES__)**
+
+
+####4.2 Decisiones tomadas para resumir datos
+Una vez realizadas las consultas a CENSYS, se determinó que las respuestas obtenidas consistían en grupos de registros o páginas de 100 elementos cada una, por lo que se decidió realizar el análisis con un conjunto de datos limitado a este número de registros. Mas tarde encontramos otro otra forma de realizar als consultas a CENSY y llegamos a obtener la informacion sin necesidad de paginar. Ademas, tras recibir toda la informacion de cada HOST directamente en bruto de CENSYS, filtramos aquellos campos que nos interesaban (Countri, TLS_version y protocolo) para crear un *data.frame* con tres columnas y tantas filas como HOSTS devuleva CENSYS.
+
+####4.3 Experimentos útiles realizados durante el proceso
+Dado que se tenía interés en mostrar los datos agrupados por localización, se pensó inicialmente en segregarlos por regiones o continentes, en los parametros pasados a la funcion *censys_search* especificamos los campos que queremos que nos devuelva, en concreto el que mas interes nos daba era *location.continent*. Las siguientes lineas del codigo muestran como se realico la consulta:
+
+```{r, eval=FALSE}
+censys_data_TLSv1.0_https <- censys_search("ipv4", "443.https.tls.version: \"TLSv1.0\"", 2, c("ip", "location.continent", "autonomous_system.asn", "location.latitude", "location.longitude"))
 ```
 
-## Including Plots
+Posteriormente, se logró afinar la consulta para presentar números que fueran más significativos en una espacio geográfico más preciso, y se utilizó una nueva consulta que segrega los datos a nivel de país y no estaba restringido a buquedas paginadas
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r, eval=FALSE}
+result_test<-censys_report("ipv4", "443.https.tls.version:  ","location.country_code", 500)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+####4.4 Procedimiento de recolección de datos
+Para la recolección de datos se realizaron todas las tareas descritas hasta el punto anterior, partiendo desde la identificación de fuentes hasta determinar el nivel de adecuación de los registros que se obtuvieron a partir de la experimentación directa con ellos, para poder llegar a definir el siguiente código como el que mejor se ajustó a las necesidades del proyecto:
+
+```{r, eval=FALSE}
+str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.2\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.2<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.1\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.1<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"TLSv1.0\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_tls1.0<-result$results
+  
+  str_protocol_use<-paste(sep="",str_protocol,"\"SSLv3\"")
+  result<-censys_report("ipv4", str_protocol_use,"location.country_code", 500)
+  df_sslv3<-result$results
+```
+
+Como resultado de la consulta, se obtiene un data frame en la que cada fila es del tipo:
+
+```{r echo=FALSE}
+countries[1,]
+
+```
+
+Destacar que en este caso ya hemos realizad las operaciones sobre los datos y construido el *data.frame* definitivo. En el ejemplo podemos ver un registro en concreto que nos dice la clave de pais, y la cantidad de HOST que tiene por cada una de las cuatro versiones de la capa de seguridad asi como un recuento total.
+
+### 5. Limpieza de los datos elegantes
+Con la información ya obtenida, se realizó un proceso de afinamiento de datos, con el fin de que se obtuvieran los denominados "datos elegantes", que básicamente lo que pretende es manejar la información de modo que se procese lo que resulta relevante para dar respuesta a la pregunta planteada, por medio del filtrado, agregación u otro tipo de operaciones que sean requeridas.
+En el caso que nos atañe, los datos fueron depurados de la siguiente manera:
+
+* Primero agrupamos los cuatro data frames optenidos en uno solo y añadimos los nombres de las columnas:
+
+```{r, eval=FALSE}
+
+  df_total<-rbind(df_tls1.0,df_tls1.1,df_tls1.2,df_sslv3)
+  
+  df_total_por_TLS<-dplyr::full_join(df_tls1.0,df_tls1.1,by="key",fill=0)
+  df_total_por_TLS<-dplyr::full_join(df_total_por_TLS,df_tls1.2,by="key",fill=0)
+  df_total_por_TLS<-dplyr::full_join(df_total_por_TLS,df_sslv3,by="key",fill=0)
+  
+  colnames(df_total_por_TLS)<-c("key","TLSv1.0","TLSv1.1","TLSv1.2","SSLv3")
+  
+```
+
+* El siguiente paso fue añadir las columnas del total de HOSTs por pais y la puntuacion que optienen segun el numero de HOSTs que albergan de cada version de TLS:
+
+```{r, eval=FALSE}
+
+  df_total_por_TLS<-dplyr::mutate(df_total_por_TLS,Total=ifelse(is.na(TLSv1.0), 0, TLSv1.0)+ifelse(is.na(TLSv1.1), 0,    TLSv1.1)+ifelse(is.na(TLSv1.2), 0, TLSv1.2)+ifelse(is.na(SSLv3), 0, SSLv3))  
+  
+  puntuacion<-c(TLSv1.2=10,TLSv1.1=7.5,TLSv1.0=5,SSLv3=2.5)
+  
+  df_total_por_TLS<-dplyr::mutate(df_total_por_TLS,puntuacion=(ifelse(is.na(TLSv1.2), 0, TLSv1.2)*puntuacion["TLSv1.2"]+ ifelse(is.na(TLSv1.1), 0, TLSv1.1)*puntuacion["TLSv1.1"]+ifelse(is.na(TLSv1.0), 0, TLSv1.0)*puntuacion["TLSv1.0"]+ifelse(is.na(SSLv3), 0, SSLv3)*puntuacion["SSLv3"]) /Total)
+  
+  return(df_total_por_TLS)
+
+```
+
+*Puntuación*: Para obtener la puntuacion dimos a cada version de TLS una puntuacion:
+
+```{r, echo=FALSE}
+
+puntuacion<-c(TLSv1.2=10,TLSv1.1=7.5,TLSv1.0=5,SSLv3=2.5)
+puntuacion
+
+```
+
+En el caso de la denominada puntuación, se trata de un valor porcentual que muestra, del total de dispositivos del país en cuestión, que tanto por ciento representa el protocolo al que hace referencia (*__FAVOR REVISAR SI MI DESCRIPCIÓN ES LA CORRECTA__*)
+Así, las cosas, se obtiene la siguiente tabla de datos:
+(*__AQUI ROBERTO VA A INCORPORAR EL PRINTSCREEN DE LA ESTRUCTURA__*)
+
+### 6. Análisis de exploración de datos
+
+**__AQUI CREO QUE IRIA LA PARTE DE CODIGO__**
+
+### 7. Modelos o predicciones estadísticas
+
+### 8. Interpretación de resultados
+
+Para la interpretacion de los resultados decidimos pintar los datos en un mapamundi. De aqui pudimos obtener algunas importantes conclusiones y aproximarmos a la respuesta de la cuestion que nos planteabamos:
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+library(rworldmap)
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+sPDF <- joinCountryData2Map( countries , joinCode = "ISO2" , nameJoinColumn = "key")
+#mapCountryData( sPDF, nameColumnToPlot="puntuacion" )
+
+#par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+#'Vhigh', 'High','Med', 'Low'
+
+#creating a user defined colour palette
+op <- palette(c('red','orange','yellow','green'))
+#find quartile breaks
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+#classify the data to a factor
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+#rename the categories
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+```
+
+```{r , echo=FALSE}
+
+#mapping
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+
+
+```
+
+En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables.
+
+### 9. Respuesta a la pregunta
+
+### 10. Síntesis y descripción de resultados
+
+### 11. Código reproducible
