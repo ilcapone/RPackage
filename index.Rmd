@@ -201,7 +201,7 @@ countries_https[1,]
 
 Destacar que en este caso ya hemos realizad las operaciones sobre los datos y construido el *data.frame* definitivo. En el ejemplo podemos ver un registro en concreto que nos dice la clave de pais, y la cantidad de HOST que tiene por cada una de las cuatro versiones de la capa de seguridad asi como un recuento total.
 
-### 5. Limpieza de los datos elegantes
+### 5. Limpieza de los datos.
 Con la información ya obtenida, se realizó un proceso de afinamiento de datos, con el fin de que se obtuvieran los denominados "datos elegantes", que básicamente lo que pretende es manejar la información de modo que se procese lo que resulta relevante para dar respuesta a la pregunta planteada, por medio del filtrado, agregación u otro tipo de operaciones que sean requeridas.
 En el caso que nos atañe, los datos fueron depurados de la siguiente manera:
 
@@ -233,7 +233,7 @@ En el caso que nos atañe, los datos fueron depurados de la siguiente manera:
 
 ```
 
-*Puntuación*: Para obtener la puntuacion dimos a cada version de TLS una puntuacion:
+*Puntuación*: Para obtener la puntuacion dimos a cada version de TLS una numero siendo 10 el mas seguro y 2.5 el que menos:
 
 ```{r, echo=FALSE}
 
@@ -241,14 +241,9 @@ puntuacion<-c(TLSv1.2=10,TLSv1.1=7.5,TLSv1.0=5,SSLv3=2.5)
 puntuacion
 
 ```
-
-En el caso de la denominada puntuación, se trata de un valor porcentual que muestra, del total de dispositivos del país en cuestión, que tanto por ciento representa el protocolo al que hace referencia (*__FAVOR REVISAR SI MI DESCRIPCIÓN ES LA CORRECTA__*)
-Así, las cosas, se obtiene la siguiente tabla de datos:
-(*__AQUI ROBERTO VA A INCORPORAR EL PRINTSCREEN DE LA ESTRUCTURA__*)
-
 ### 6. Interpretación de resultados
 
-Para la interpretacion de los resultados decidimos pintar los datos en un mapamundi. De aqui pudimos obtener algunas importantes conclusiones y aproximarmos a la respuesta de la cuestion que nos planteabamos:
+Para la interpretacion de los resultados decidimos pintar los datos en un mapamundi. De aqui pudimos obtener algunas conclusiones importantes y aproximarmos a la respuesta de la cuestion que nos planteabamos:
 
 ```{r , echo=FALSE, results='hide', include=FALSE}
 
@@ -269,14 +264,51 @@ mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='cate
 ```
 
 
-En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables.
+En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables. En este unicamente esta representado el protocolo https, mas adelante mostraremos todos los resultados.
 
 ### 7. Respuesta a la pregunta
 
+Para responder de una forma mas clara a la pregunta mostramos un ranking donde se puede ver aquellos paises que han obtenido una nota mayor que 8.5 en nuestra escala y por tanto serian los mas seguros ordenados de izquierda mas seguro a derecha mas inseguro:
 
+```{r echo=FALSE}
+
+mostSecures <- filter(countries_https, countries_https$puntuacion > 8.5)
+ordenados_seguros <-mostSecures[rev(order(mostSecures$puntuacion)),]
+ordenados_seguros$key
+
+
+
+```
+ y aquellos que han obtenido una nota por debajo de 5.5 ordenados de izquierda mas seguro a derecha mas inseguro:
+ 
+ 
+```{r echo=FALSE}
+
+mostSecures <- filter(countries_https, countries_https$puntuacion < 5.5)
+ordenados_inseguros <-mostSecures[rev(order(mostSecures$puntuacion)),]
+ordenados_inseguros$key
+
+```
+
+Graficamente podemos ver los resultados de una forma mas clara y ver que nota han obtenido estos dos subgrupos:
+
+ * Los mas seguros:
+ 
+```{r echo=FALSE}
+qplot(x = key, y = puntuacion, data = ordenados_seguros)
+
+```
+
+* Los menos seguros:
+
+```{r echo=FALSE}
+qplot(x = key, y = puntuacion, data = ordenados_inseguros)
+
+```
 
 ### 8. Síntesis y descripción de resultados
 
+A continuacion mostramos los mapas seun los protocolos. El protocolo https esta incluido mas arriba.
 
 ```{r , echo=FALSE, results='hide', include=FALSE}
 
@@ -328,3 +360,5 @@ mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='cate
 ```
 
 ### 9. Código reproducible
+
+El codigo reproducible se encuentra en en un repositorio de github en la direcion <https://github.com/ilcapone/RPackage>.
