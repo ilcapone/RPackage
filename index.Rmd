@@ -7,14 +7,39 @@ output: html_document
 
 devtools::install_github("hrbrmstr/censys")
 
+if (!suppressMessages(suppressWarnings(require("countrycode", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("countrycode", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("plyr", quietly = T)))) {
+  suppressMessages(suppressWarnings(install.packages("plyr", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("dplyr", quietly = T)))) {  
+  suppressMessages(suppressWarnings(install.packages("dplyr", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("ggplot2", quietly = T)))) {
+suppressMessages(suppressWarnings(install.packages("ggplot2", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("httr", quietly = T)))) {
+suppressMessages(suppressWarnings(install.packages("httr", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("purrr", quietly = T)))) {
+suppressMessages(suppressWarnings(install.packages("purrr", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("gridExtra", quietly = T)))) {
+suppressMessages(suppressWarnings(install.packages("gridExtra", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+if (!suppressMessages(suppressWarnings(require("rworldmap", quietly = T)))) {
+suppressMessages(suppressWarnings(install.packages("rworldmap", repos = "http://cran.rstudio.com/", quiet = T, dependencies = T)))
+}
+library(rworldmap)
 library(httr)
 library(censys)
 library(purrr)
-library("XML")
 library("plyr")
 library("ggplot2")
 library("gridExtra")
 library(dplyr)
+library(countrycode)
 
 Sys.setenv(CENSYS_API_ID = "950dd34b-a475-4ac3-af0d-e39c8a0f4946", CENSYS_API_SECRET = "HlHy4bCBlIYHScZ1JExmai1m3EsOCDOI")
 
@@ -23,8 +48,7 @@ Sys.setenv(CENSYS_API_ID = "950dd34b-a475-4ac3-af0d-e39c8a0f4946", CENSYS_API_SE
 CENSYS_API_URL <- "https://www.censys.io/api/v1/"
 
 
-df_countries <- function(protocol = c("443.https","110.pop3.starttls","25.smtp.starttls","143.imap.starttls","995.pop3s","993.imaps")){
-  #protocol<-c("443.https")
+df_countries <- function(protocol = c("443.https","110.pop3.starttls","25.smtp.starttls","143.imap.starttls","995.pop3s.tls","993.imaps.tls")){
   
   str_protocol<- paste(sep="",protocol,".tls.version:  ")
 
@@ -64,8 +88,8 @@ countries_https <- df_countries("443.https")
 countries_pop3 <- df_countries("110.pop3.starttls")
 countries_smtp <- df_countries("25.smtp.starttls")
 countries_imap <- df_countries("143.imap.starttls")
-#countries_pop3s <- df_countries("995.pop3s")
-#countries_imaps <- df_countries("993.imaps")
+countries_pop3s <- df_countries("995.pop3s.tls")
+countries_imaps <- df_countries("993.imaps.tls")
 
 ```
 
@@ -247,7 +271,6 @@ Para la interpretacion de los resultados decidimos pintar los datos en un mapamu
 
 ```{r , echo=FALSE, results='hide', include=FALSE}
 
-library(rworldmap)
 par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
 sPDF <- joinCountryData2Map( countries_https , joinCode = "ISO2" , nameJoinColumn = "key")
 op <- palette(c('red','orange','yellow','green'))
@@ -266,6 +289,28 @@ mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='cate
 
 En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables. En este unicamente esta representado el protocolo https, mas adelante mostraremos todos los resultados.
 
+```{r echo=FALSE}
+mapCountryData( sPDF, 
+                nameColumnToPlot='puntuacion_categories' , 
+                mapTitle='Riesgo por pais y cantidad de hosts analizados' , 
+                colourPalette='black2White', 
+                oceanCol='lightblue', 
+                missingCountryCol='white',
+                catMethod='categorical')
+mapBubbles(sPDF,
+           nameZSize='Total',
+           nameZColour="puntuacion_categories",
+           colourPalette = "palette",
+           add = T, 
+           addColourLegend = T, 
+           addLegend = T, 
+           pch=21, 
+           symbolSize=1,
+           catMethod='categorical')
+```
+
+También es interesante ver la relación que existe entre el número de servidores escaneados y el nivel de riesgo. En este mapa la escala de colores nos sigue mostrando el nivel de riesgo miestras que ahora también podemos ver la cantidad de servidores escaneados en función del tamaño del circulo que se coloca en el centro de cada país.
+
 ### 7. Respuesta a la pregunta
 
 Para responder de una forma mas clara a la pregunta mostramos un ranking donde se puede ver aquellos paises que han obtenido una nota mayor que 8.5 en nuestra escala y por tanto serian los mas seguros ordenados de izquierda mas seguro a derecha mas inseguro:
@@ -274,20 +319,18 @@ Para responder de una forma mas clara a la pregunta mostramos un ranking donde s
 
 mostSecures <- filter(countries_https, countries_https$puntuacion > 8.5)
 ordenados_seguros <-mostSecures[rev(order(mostSecures$puntuacion)),]
-ordenados_seguros$key
-
-
-
+ordenados_seguros<-dplyr::inner_join(ordenados_seguros,countrycode_data,by=c("key"="iso2c"),fill=0)
+cat(ordenados_seguros$country.name,sep="\n")
 ```
- y aquellos que han obtenido una nota por debajo de 5.5 ordenados de izquierda mas seguro a derecha mas inseguro:
+ y aquellos que han obtenido una nota por debajo de 5.5 ordenados de mayor a menor nota:
  
  
 ```{r echo=FALSE}
 
 mostSecures <- filter(countries_https, countries_https$puntuacion < 5.5)
 ordenados_inseguros <-mostSecures[rev(order(mostSecures$puntuacion)),]
-ordenados_inseguros$key
-
+ordenados_inseguros<-dplyr::inner_join(ordenados_inseguros,countrycode_data,by=c("key"="iso2c"),fill=0)
+cat(ordenados_inseguros$country.name,sep="\n")
 ```
 
 Graficamente podemos ver los resultados de una forma mas clara y ver que nota han obtenido estos dos subgrupos:
@@ -295,16 +338,27 @@ Graficamente podemos ver los resultados de una forma mas clara y ver que nota ha
  * Los mas seguros:
  
 ```{r echo=FALSE}
-qplot(x = key, y = puntuacion, data = ordenados_seguros)
+ordenados_seguros$country.name<-factor(ordenados_seguros$country.name, levels=unique(ordenados_seguros$country.name))
+ggplot(data=ordenados_seguros, aes(x=country.name, y=puntuacion, fill=puntuacion)) +
+  geom_bar(colour="black", stat="identity") +
+  guides(fill=FALSE) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +
+  scale_fill_distiller(palette = "Greens", direction = 1)
 
 ```
 
 * Los menos seguros:
 
 ```{r echo=FALSE}
-qplot(x = key, y = puntuacion, data = ordenados_inseguros)
-
+ordenados_inseguros$country.name<-factor(ordenados_inseguros$country.name, levels=unique(ordenados_inseguros$country.name))
+ggplot(data=ordenados_inseguros, aes(x=country.name, y=puntuacion, fill=puntuacion)) +
+  geom_bar(colour="black", stat="identity") +
+  guides(fill=FALSE) +
+  theme(axis.text.x=element_text(angle = -90, hjust = 0)) +
+  scale_fill_distiller(palette = "Reds", direction = 1)
 ```
+
+
 
 ### 8. Síntesis y descripción de resultados
 
@@ -321,8 +375,8 @@ levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
 
 ```{r echo=FALSE}
 
-mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan pop3' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
-
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan POP3' , colourPalette='palette', oceanCol='white', missingCountryCol='white')
+mapBubbles(sPDF,nameZSize='Total',nameZColour="puntuacion_categories",colourPalette = "black2White",add = T, addColourLegend = F, addLegend = T, pch=21, symbolSize=1,catMethod='categorical')
 ```
 
 
@@ -338,7 +392,8 @@ levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
 
 ```{r echo=FALSE}
 
-mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan smtp' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan SMTP' , colourPalette='palette', oceanCol='white', missingCountryCol='white')
+mapBubbles(sPDF,nameZSize='Total',nameZColour="puntuacion_categories",colourPalette = "black2White",add = T, addColourLegend = F, addLegend = T, pch=21, symbolSize=1,catMethod='categorical')
 
 ```
 
@@ -355,9 +410,51 @@ levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
 
 ```{r echo=FALSE}
 
-mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan imap' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan IMAP' , colourPalette='palette', oceanCol='white', missingCountryCol='white')
+mapBubbles(sPDF,nameZSize='Total',nameZColour="puntuacion_categories",colourPalette = "black2White",add = T, addColourLegend = F, addLegend = T, pch=21, symbolSize=1,catMethod='categorical')
 
 ```
+
+
+
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+sPDF <- joinCountryData2Map( countries_pop3s , joinCode = "ISO2" , nameJoinColumn = "key")
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
+```
+
+```{r echo=FALSE}
+
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan POP3s' , colourPalette='palette', oceanCol='white', missingCountryCol='white')
+mapBubbles(sPDF,nameZSize='Total',nameZColour="puntuacion_categories",colourPalette = "black2White",add = T, addColourLegend = F, addLegend = T, pch=21, symbolSize=1,catMethod='categorical')
+
+```
+
+
+
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+sPDF <- joinCountryData2Map( countries_imaps , joinCode = "ISO2" , nameJoinColumn = "key")
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
+```
+
+```{r echo=FALSE}
+
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan IMAPs' , colourPalette='palette', oceanCol='white', missingCountryCol='white')
+mapBubbles(sPDF,nameZSize='Total',nameZColour="puntuacion_categories",colourPalette = "black2White",add = T, addColourLegend = F, addLegend = T, pch=21, symbolSize=1,catMethod='categorical')
+
+```
+
+
+
 
 ### 9. Código reproducible
 
