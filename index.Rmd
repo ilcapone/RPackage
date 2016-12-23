@@ -134,18 +134,24 @@ El congunto de variables siguiente esta repetido tantas veces como procolos(http
 * Full_Dataframe: Union de los datos elegantes de todas las consultas para generar un unico elemento sobre el que realizar el analisis.
 
 Como esta busqeda era muy ineficiente hicimos una funcion que generase la query segun el protocolo y nos devolvise el resultado de la busqeda preparado para ser analizado y mostrado. Las variables que utilizamos en la funcion son:
-+ **(__OJO AÑADIR AQUI EL SIGIFICADO DE LAS VARIABLES__)**
 
-* str_protocol: 
-* str_protocol_use: 
-* df_tls1.2:
-* df_tls1.1:
-* df_tls1.0:
-* df_sslv3:
-* df_total:
-* df_total_por_TLS:
+* str_protocol_use: Variable que almacena el protocolo para el cual se va a realizar la busqeda preparado para la query de CENSYS. 
+* df_tls1.2: Almacena el resultado que se encuentra dentro de la secion resultado de la respuesta de CENSYS.
+* df_tls1.1: Almacena el resultado que se encuentra dentro de la secion resultado de la respuesta de CENSYS.
+* df_tls1.0: Almacena el resultado que se encuentra dentro de la secion resultado de la respuesta de CENSYS.
+* df_sslv3: Almacena el resultado que se encuentra dentro de la secion resultado de la respuesta de CENSYS.
+* df_total: Data frame cn todos formado mediante la union de los cuatro data frames.
+* df_total_por_TLS: El Data frame final con la columna de las puntuaciones y el total de host por pais.
 
-+ **(__OJO AÑADIR AQUI LAS VARIABLES DE LAS COLUMNAS DE LOS DATAFRAMS Y OTROS DETALLES__)**
+R especto al data frame final posee las siguientes columnas:
+
+* key: Clave que identifica al pais segun el tipo de codigo ISO2.
+* TLSv1.0: Numero de Host que tiene el pais de la version 1.0 de TLS        
+* TLSv1.1: Numero de Host que tiene el pais de la version 1.1 de TLS 
+* TLSv1.2: Numero de Host que tiene el pais de la version 1.2 de TLS 
+* SSLv3: Numero de Host que tiene el pais de la version 3 de SSL 
+* Total: Cantidad total de HOSTS que tiene el pais.
+* puntuacion: Puntuacion que obtiene el pais.
 
 
 ####4.2 Decisiones tomadas para resumir datos
@@ -240,13 +246,7 @@ En el caso de la denominada puntuación, se trata de un valor porcentual que mue
 Así, las cosas, se obtiene la siguiente tabla de datos:
 (*__AQUI ROBERTO VA A INCORPORAR EL PRINTSCREEN DE LA ESTRUCTURA__*)
 
-### 6. Análisis de exploración de datos
-
-**__AQUI CREO QUE IRIA LA PARTE DE CODIGO__**
-
-### 7. Modelos o predicciones estadísticas
-
-### 8. Interpretación de resultados
+### 6. Interpretación de resultados
 
 Para la interpretacion de los resultados decidimos pintar los datos en un mapamundi. De aqui pudimos obtener algunas importantes conclusiones y aproximarmos a la respuesta de la cuestion que nos planteabamos:
 
@@ -255,33 +255,76 @@ Para la interpretacion de los resultados decidimos pintar los datos en un mapamu
 library(rworldmap)
 par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
 sPDF <- joinCountryData2Map( countries_https , joinCode = "ISO2" , nameJoinColumn = "key")
-#mapCountryData( sPDF, nameColumnToPlot="puntuacion" )
-
-#par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
-#'Vhigh', 'High','Med', 'Low'
-
-#creating a user defined colour palette
 op <- palette(c('red','orange','yellow','green'))
-#find quartile breaks
 cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
-#classify the data to a factor
 sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
-#rename the categories
 levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
 
 ```
 
 ```{r echo=FALSE}
 #mapping
-mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='TLS Vulneravilities' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan https' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
 
 ```
 
 
 En el grafico se puede ver en verde los paises que tienen menos riesgo, mientras en rojo se pintan aquellos que tienen las versiones de TLS mas desacualiadas y por tanto mas vulnerables.
 
-### 9. Respuesta a la pregunta
+### 7. Respuesta a la pregunta
 
-### 10. Síntesis y descripción de resultados
 
-### 11. Código reproducible
+
+### 8. Síntesis y descripción de resultados
+
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+sPDF <- joinCountryData2Map( countries_pop3 , joinCode = "ISO2" , nameJoinColumn = "key")
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
+```
+
+```{r echo=FALSE}
+
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan pop3' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+```
+
+
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+sPDF <- joinCountryData2Map( countries_smtp , joinCode = "ISO2" , nameJoinColumn = "key")
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE) 
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
+```
+
+```{r echo=FALSE}
+
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan smtp' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+```
+
+
+
+```{r , echo=FALSE, results='hide', include=FALSE}
+
+sPDF <- joinCountryData2Map( countries_imap , joinCode = "ISO2" , nameJoinColumn = "key")
+cutVector <- quantile(sPDF@data[["puntuacion"]],na.rm=TRUE)
+sPDF@data[["puntuacion_categories"]] <- cut(sPDF@data[["puntuacion"]], cutVector, include.lowest=TRUE )
+levels(sPDF@data[["puntuacion_categories"]]) <- c('Vhigh', 'High','Med', 'Low')
+
+```
+
+```{r echo=FALSE}
+
+mapCountryData( sPDF, nameColumnToPlot='puntuacion_categories' , catMethod='categorical' , mapTitle='Riesgo por pais segun HOSTs que implementan imap' , colourPalette='palette', oceanCol='lightblue', missingCountryCol='white')
+
+```
+
+### 9. Código reproducible
