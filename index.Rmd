@@ -308,7 +308,7 @@ qplot(x = key, y = puntuacion, data = ordenados_inseguros)
 
 ### 8. Síntesis y descripción de resultados
 
-A continuacion mostramos los mapas seun los protocolos. El protocolo https esta incluido mas arriba.
+A continuacion mostramos los mapas segun los protocolos. El protocolo https esta incluido mas arriba.
 
 ```{r , echo=FALSE, results='hide', include=FALSE}
 
