@@ -13,7 +13,7 @@ library("ggplot2")
 library("gridExtra")
 library(dplyr)
 
-Sys.setenv(CENSYS_API_ID = "950dd34b-a475-4ac3-af0d-e39c8a0f4946", CENSYS_API_SECRET = "HlHy4bCBlIYHScZ1JExmai1m3EsOCDOI")
+Sys.setenv(CENSYS_API_ID = "", CENSYS_API_SECRET = "")
 
 
 CENSYS_API_URL <- "https://www.censys.io/api/v1/"
